@@ -1,7 +1,9 @@
+import datetime
 import time
 import random
 import logging
 import paramiko
+from krkn_lib.models.k8s import AffectedNode
 import krkn.invoke.command as runcommand
 from krkn_lib.k8s import KrknKubernetes
 
@@ -43,20 +45,24 @@ def get_node(label_selector, instance_kill_count, kubecli: KrknKubernetes):
 
 # krkn_lib
 # Wait until the node status becomes Ready
-def wait_for_ready_status(node, timeout, kubecli: KrknKubernetes):
-    kubecli.watch_node_status(node, "True", timeout)
+def wait_for_ready_status(node, timeout, kubecli: KrknKubernetes, affected_node: AffectedNode ):
+    ready_time =  kubecli.watch_node_status(node, "True", timeout)
+    affected_node.set_not_ready_time(ready_time)
+   
 
 
 # krkn_lib
 # Wait until the node status becomes Not Ready
-def wait_for_not_ready_status(node, timeout, kubecli: KrknKubernetes):
-    kubecli.watch_node_status(node, "False", timeout)
-
+def wait_for_not_ready_status(node, timeout, kubecli: KrknKubernetes, affected_node: AffectedNode):
+    not_ready_time = kubecli.watch_node_status(node, "False", timeout)
+    affected_node.set_not_ready_time(not_ready_time)
+    
 
 # krkn_lib
 # Wait until the node status becomes Unknown
-def wait_for_unknown_status(node, timeout, kubecli: KrknKubernetes):
-    kubecli.watch_node_status(node, "Unknown", timeout)
+def wait_for_unknown_status(node, timeout, kubecli: KrknKubernetes, affected_node: AffectedNode):
+    unknown_time = kubecli.watch_node_status(node, "Unknown", timeout)
+    affected_node.set_unknown_time(unknown_time)
 
 
 # Get the ip of the cluster node

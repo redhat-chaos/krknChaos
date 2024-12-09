@@ -6,6 +6,7 @@ from itertools import repeat
 import yaml
 from krkn_lib.k8s import KrknKubernetes
 from krkn_lib.models.telemetry import ScenarioTelemetry
+from krkn_lib.models.k8s import AffectedNode
 from krkn_lib.telemetry.ocp import KrknTelemetryOpenshift
 from krkn_lib.utils import get_yaml_item_value, log_exception
 
@@ -49,6 +50,7 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
                                 node_scenario,
                                 node_scenario_object,
                                 lib_telemetry.get_lib_kubernetes(),
+                                scenario_telemetry,
                             )
                             end_time = int(time.time())
                             cerberus.get_status(krkn_config, start_time, end_time)
@@ -120,7 +122,7 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
             )
 
     def inject_node_scenario(
-        self, action, node_scenario, node_scenario_object, kubecli: KrknKubernetes
+        self, action, node_scenario, node_scenario_object, kubecli: KrknKubernetes, scenario_telemetry: ScenarioTelemetry
     ):
         
         # Get the node scenario configurations for setting nodes
@@ -145,6 +147,7 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
         else: 
             for single_node in nodes:
                 self.run_node(single_node, node_scenario_object, action, node_scenario)
+        scenario_telemetry.
 
     def multiprocess_nodes(self, nodes, node_scenario_object, action, node_scenario):
         try:
@@ -172,7 +175,7 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
             node_scenario, "ssh_private_key", "~/.ssh/id_rsa"
         )
         generic_cloud_scenarios = ("stop_kubelet_scenario", "node_crash_scenario")
-
+        affected_node = AffectedNode()
         if node_general and action not in generic_cloud_scenarios:
             logging.info(
                 "Scenario: "
@@ -182,42 +185,42 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
         else:
             if action == "node_start_scenario":
                 node_scenario_object.node_start_scenario(
-                    run_kill_count, single_node, timeout
+                    run_kill_count, single_node, timeout, affected_node
                 )
             elif action == "node_stop_scenario":
                 node_scenario_object.node_stop_scenario(
-                    run_kill_count, single_node, timeout
+                    run_kill_count, single_node, timeout, affected_node
                 )
             elif action == "node_stop_start_scenario":
                 node_scenario_object.node_stop_start_scenario(
-                    run_kill_count, single_node, timeout, duration
+                    run_kill_count, single_node, timeout, duration, affected_node
                 )
             elif action == "node_termination_scenario":
                 node_scenario_object.node_termination_scenario(
-                    run_kill_count, single_node, timeout
+                    run_kill_count, single_node, timeout, affected_node
                 )
             elif action == "node_reboot_scenario":
                 node_scenario_object.node_reboot_scenario(
-                    run_kill_count, single_node, timeout
+                    run_kill_count, single_node, timeout, affected_node
                 )
             elif action == "node_disk_detach_attach_scenario":
                 node_scenario_object.node_disk_detach_attach_scenario(
                     run_kill_count, single_node, timeout, duration)
             elif action == "stop_start_kubelet_scenario":
                 node_scenario_object.stop_start_kubelet_scenario(
-                    run_kill_count, single_node, timeout
+                    run_kill_count, single_node, timeout, affected_node
                 )
             elif action == "restart_kubelet_scenario":
                 node_scenario_object.restart_kubelet_scenario(
-                    run_kill_count, single_node, timeout
+                    run_kill_count, single_node, timeout, affected_node
                 )
             elif action == "stop_kubelet_scenario":
                 node_scenario_object.stop_kubelet_scenario(
-                    run_kill_count, single_node, timeout
+                    run_kill_count, single_node, timeout, affected_node
                 )
             elif action == "node_crash_scenario":
                 node_scenario_object.node_crash_scenario(
-                    run_kill_count, single_node, timeout
+                    run_kill_count, single_node, timeout, affected_node
                 )
             elif action == "stop_start_helper_node_scenario":
                 if node_scenario["cloud_type"] != "openstack":
