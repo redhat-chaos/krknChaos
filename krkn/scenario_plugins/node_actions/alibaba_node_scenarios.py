@@ -18,7 +18,7 @@ from krkn.scenario_plugins.node_actions.abstract_node_scenarios import (
     abstract_node_scenarios,
 )
 from krkn_lib.k8s import KrknKubernetes
-
+from krkn_lib.models.k8s import AffectedNode, AffectedNodeStatus
 
 class Alibaba:
     def __init__(self):
@@ -215,8 +215,10 @@ class Alibaba:
 
 # krkn_lib
 class alibaba_node_scenarios(abstract_node_scenarios):
-    def __init__(self, kubecli: KrknKubernetes):
+    def __init__(self, kubecli: KrknKubernetes, affected_nodes_status: AffectedNodeStatus):
+        super().__init__(kubecli, affected_nodes_status)
         self.alibaba = Alibaba()
+        
 
     # Node scenario to start the node
     def node_start_scenario(self, instance_kill_count, node, timeout):

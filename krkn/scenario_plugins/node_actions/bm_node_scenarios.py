@@ -9,7 +9,7 @@ import pyipmi.interfaces
 import time
 import traceback
 from krkn_lib.k8s import KrknKubernetes
-
+from krkn_lib.models.k8s import AffectedNode, AffectedNodeStatus
 
 class BM:
     def __init__(self, bm_info, user, passwd):
@@ -127,8 +127,8 @@ class BM:
 
 # krkn_lib
 class bm_node_scenarios(abstract_node_scenarios):
-    def __init__(self, bm_info, user, passwd, kubecli: KrknKubernetes):
-        super().__init__(kubecli)
+    def __init__(self, bm_info, user, passwd, kubecli: KrknKubernetes,affected_nodes_status: AffectedNodeStatus):
+        super().__init__(kubecli, affected_nodes_status)
         self.bm = BM(bm_info, user, passwd)
 
     # Node scenario to start the node

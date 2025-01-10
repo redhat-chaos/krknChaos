@@ -7,7 +7,7 @@ from krkn.scenario_plugins.node_actions.abstract_node_scenarios import (
     abstract_node_scenarios,
 )
 from krkn_lib.k8s import KrknKubernetes
-
+from krkn_lib.models.k8s import AffectedNode, AffectedNodeStatus
 
 class AWS:
     def __init__(self):
@@ -249,8 +249,8 @@ class AWS:
 
 # krkn_lib
 class aws_node_scenarios(abstract_node_scenarios):
-    def __init__(self, kubecli: KrknKubernetes):
-        super().__init__(kubecli)
+    def __init__(self, kubecli: KrknKubernetes, affected_nodes_status: AffectedNodeStatus):
+        super().__init__(kubecli, affected_nodes_status)
         self.aws = AWS()
 
     # Node scenario to start the node
@@ -343,8 +343,8 @@ class aws_node_scenarios(abstract_node_scenarios):
                     "Rebooting the node %s with instance ID: %s " % (node, instance_id)
                 )
                 self.aws.reboot_instances(instance_id)
-                nodeaction.wait_for_unknown_status(node, timeout, self.kubecli)
-                nodeaction.wait_for_ready_status(node, timeout, self.kubecli)
+                affected_node = nodeaction.wait_for_unknown_status(node, timeout, self.kubecli)
+                affected_node = nodeaction.wait_for_ready_status(node, timeout, self.kubecli)
                 logging.info(
                     "Node with instance ID: %s has been rebooted" % (instance_id)
                 )
