@@ -209,6 +209,7 @@ class gcp_node_scenarios(abstract_node_scenarios):
     def __init__(self, kubecli: KrknKubernetes, affected_nodes_status: AffectedNodeStatus):
         super().__init__(kubecli, affected_nodes_status)
         self.gcp = GCP()
+        print("selfkeys" + str(vars(self)))
 
     # Node scenario to start the node
     def node_start_scenario(self, instance_kill_count, node, timeout):
@@ -236,7 +237,8 @@ class gcp_node_scenarios(abstract_node_scenarios):
                 logging.error("node_start_scenario injection failed!")
 
                 raise RuntimeError()
-            self.add_affected_node(affected_node)
+            
+            self.affected_nodes_status.affected_nodes.append(affected_node)
 
     # Node scenario to stop the node
     def node_stop_scenario(self, instance_kill_count, node, timeout):
@@ -263,7 +265,8 @@ class gcp_node_scenarios(abstract_node_scenarios):
                 logging.error("node_stop_scenario injection failed!")
 
                 raise RuntimeError()
-            self.add_affected_node(affected_node)
+
+            self.affected_nodes_status.affected_nodes.append(affected_node)
 
     # Node scenario to terminate the node
     def node_termination_scenario(self, instance_kill_count, node, timeout):
@@ -323,4 +326,4 @@ class gcp_node_scenarios(abstract_node_scenarios):
                 logging.error("node_reboot_scenario injection failed!")
 
                 raise RuntimeError()
-            self.add_affected_node(affected_node)
+            self.affected_nodes_status.affected_nodes.append(affected_node)

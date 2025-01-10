@@ -15,9 +15,6 @@ class abstract_node_scenarios:
         self.kubecli = kubecli
         self.affected_nodes_status = affected_nodes_status
 
-    def add_affected_node(self, affected_node: AffectedNode):
-        self.affected_node_status.affected_nodes.append(affected_node)
-
     # Node scenario to start the node
     def node_start_scenario(self, instance_kill_count, node, timeout):
         pass

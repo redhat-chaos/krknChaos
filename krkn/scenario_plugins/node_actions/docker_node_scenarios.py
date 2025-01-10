@@ -65,7 +65,7 @@ class docker_node_scenarios(abstract_node_scenarios):
                 )
                 logging.error("node_start_scenario injection failed!")
                 raise e
-            self.add_affected_node(affected_node)
+            self.affected_nodes_status.affected_nodes.append(affected_node)
 
     # Node scenario to stop the node
     def node_stop_scenario(self, instance_kill_count, node, timeout):
@@ -89,7 +89,7 @@ class docker_node_scenarios(abstract_node_scenarios):
                 )
                 logging.error("node_stop_scenario injection failed!")
                 raise e
-            self.add_affected_node(affected_node)
+            self.affected_nodes_status.affected_nodes.append(affected_node)
 
     # Node scenario to terminate the node
     def node_termination_scenario(self, instance_kill_count, node, timeout):
@@ -139,4 +139,4 @@ class docker_node_scenarios(abstract_node_scenarios):
                 )
                 logging.error("node_reboot_scenario injection failed!")
                 raise e
-            self.add_affected_node(affected_node)
+            self.affected_nodes_status.affected_nodes.append(affected_node)
