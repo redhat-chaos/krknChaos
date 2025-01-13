@@ -154,13 +154,11 @@ class GCP:
             raise RuntimeError()
 
     # Get instance status
-    def get_instance_status(self, instance_id, expected_status, timeout, affected_node):
+    def get_instance_status(self, instance_id, expected_status, timeout):
         # states: PROVISIONING, STAGING, RUNNING, STOPPING, SUSPENDING, SUSPENDED, REPAIRING,
         # and TERMINATED.
         i = 0
         sleeper = 5
-        start_time = time.time()
-        stopped_status = False
         while i <= timeout:
             try:
                 request = compute_v1.GetInstanceRequest(
@@ -169,8 +167,6 @@ class GCP:
                     zone=self.get_node_instance_zone(instance_id),
                 )
                 instance_status = self.instance_client.get(request=request).status
-                if instance_status.lower() == "stopping": 
-                    stopped_status = True
                 logging.info("Status of instance " + str(instance_id) + ": " + instance_status)
             except Exception as e:
                 logging.error(
@@ -180,12 +176,7 @@ class GCP:
                 raise RuntimeError()
 
             if instance_status == expected_status:
-                logging.info('status matches, end' + str(expected_status) + str(instance_status))
-                end_time = time.time()
-                if stopped_status: 
-                    expected_status = "stopped"
-                affected_node.set_affected_node_status(expected_status, end_time - start_time)
-                logging.info("affected node " + str(affected_node.to_json()))
+                logging.info('status matches, end' + str(expected_status) + str(instance_status))                
                 return True
             time.sleep(sleeper)
             i += sleeper
@@ -201,16 +192,31 @@ class GCP:
 
     # Wait until the node instance is running
     def wait_until_running(self, instance_id, timeout, affected_node):
-        return self.get_instance_status(instance_id, "RUNNING", timeout, affected_node)
+        start_time = time.time()
+        instance_status = self.get_instance_status(instance_id, "RUNNING", timeout)
+        end_time = time.time()
+        if affected_node:
+            affected_node.set_affected_node_status("running", end_time - start_time)
+        return instance_status
 
     # Wait until the node instance is stopped
     def wait_until_stopped(self, instance_id, timeout, affected_node):
         # In GCP, the next state after STOPPING is TERMINATED
-        return self.get_instance_status(instance_id, "TERMINATED", timeout, affected_node)
+        start_time = time.time()
+        instance_status = self.get_instance_status(instance_id, "TERMINATED", timeout)
+        end_time = time.time()
+        if affected_node:
+            affected_node.set_affected_node_status("stopped", end_time - start_time)
+        return instance_status
 
     # Wait until the node instance is terminated
     def wait_until_terminated(self, instance_id, timeout, affected_node):
-        return self.get_instance_status(instance_id, "TERMINATED", timeout, affected_node)
+        start_time = time.time()
+        instance_status =  self.get_instance_status(instance_id, "TERMINATED", timeout)
+        end_time = time.time()
+        if affected_node:
+            affected_node.set_affected_node_status("terminated", end_time - start_time)
+        return instance_status
 
 
 # krkn_lib

@@ -106,7 +106,8 @@ class Azure:
                 logging.info("Vm %s is still not ready in allotted time" % vm_name)
                 return False
         end_time = time.time()
-        affected_node.set_affected_node_status("running", end_time - start_time)
+        if affected_node:
+            affected_node.set_affected_node_status("running", end_time - start_time)
         return True
 
     # Wait until the node instance is stopped
@@ -123,7 +124,8 @@ class Azure:
                 logging.info("Vm %s is still not stopped in allotted time" % vm_name)
                 return False
         end_time = time.time()
-        affected_node.set_affected_node_status("stopped", end_time - start_time)
+        if affected_node:
+            affected_node.set_affected_node_status("stopped", end_time - start_time)
         return True
 
     # Wait until the node instance is terminated
@@ -148,7 +150,8 @@ class Azure:
             except Exception:
                 logging.info("Vm %s is terminated" % vm_name)
                 end_time = time.time()
-                affected_node.set_affected_node_status("terminated", end_time - start_time)
+                if affected_node:
+                    affected_node.set_affected_node_status("terminated", end_time - start_time)
                 return True
 
 

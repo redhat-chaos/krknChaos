@@ -127,7 +127,7 @@ class docker_node_scenarios(abstract_node_scenarios):
                 )
                 self.docker.reboot_instances(node)
                 nodeaction.wait_for_unknown_status(node, timeout, self.kubecli, affected_node)
-                nodeaction.wait_for_ready_status(node, timeout, self.kubecli)
+                nodeaction.wait_for_ready_status(node, timeout, self.kubecli, affected_node)
                 logging.info(
                     "Node with container ID: %s has been rebooted" % (container_id)
                 )

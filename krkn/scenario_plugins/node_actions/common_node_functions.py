@@ -46,21 +46,21 @@ def get_node(label_selector, instance_kill_count, kubecli: KrknKubernetes):
 
 # krkn_lib
 # Wait until the node status becomes Ready
-def wait_for_ready_status(node, timeout, kubecli: KrknKubernetes, affected_node ):
+def wait_for_ready_status(node, timeout, kubecli: KrknKubernetes, affected_node: AffectedNode = None):
     affected_node =  kubecli.watch_node_status(node, "True", timeout, affected_node)
     return affected_node
    
 
 # krkn_lib
 # Wait until the node status becomes Not Ready
-def wait_for_not_ready_status(node, timeout, kubecli: KrknKubernetes, affected_node):
+def wait_for_not_ready_status(node, timeout, kubecli: KrknKubernetes, affected_node: AffectedNode = None):
     affected_node = kubecli.watch_node_status(node, "False", timeout, affected_node)
     return affected_node
     
 
 # krkn_lib
 # Wait until the node status becomes Unknown
-def wait_for_unknown_status(node, timeout, kubecli: KrknKubernetes, affected_node):
+def wait_for_unknown_status(node, timeout, kubecli: KrknKubernetes, affected_node: AffectedNode = None):
     affected_node = kubecli.watch_node_status(node, "Unknown", timeout, affected_node)
     return affected_node
 

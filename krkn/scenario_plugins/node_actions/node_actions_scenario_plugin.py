@@ -150,7 +150,6 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
             for single_node in nodes:
                 self.run_node(single_node, node_scenario_object, action, node_scenario)
         affected_nodes_status = node_scenario_object.affected_nodes_status
-        logging.info('final affected nodes ' + str(affected_nodes_status.affected_nodes[0].node_name) + str(len(str(affected_nodes_status.affected_nodes))))
         scenario_telemetry.affected_nodes = affected_nodes_status.affected_nodes
 
     def multiprocess_nodes(self, nodes, node_scenario_object, action, node_scenario, affected_nodes_status):
