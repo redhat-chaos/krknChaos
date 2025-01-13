@@ -99,13 +99,13 @@ class AbstractScenarioPlugin(ABC):
                 int(scenario_telemetry.start_timestamp),
                 int(scenario_telemetry.end_timestamp),
             )
-            utils.populate_cluster_events(
-                scenario_telemetry,
-                parsed_scenario_config,
-                telemetry.get_lib_kubernetes(),
-                int(scenario_telemetry.start_timestamp),
-                int(scenario_telemetry.end_timestamp),
-            )
+            # utils.populate_cluster_events(
+            #     scenario_telemetry,
+            #     parsed_scenario_config,
+            #     telemetry.get_lib_kubernetes(),
+            #     int(scenario_telemetry.start_timestamp),
+            #     int(scenario_telemetry.end_timestamp),
+            # )
 
             if scenario_telemetry.exit_status != 0:
                 failed_scenarios.append(scenario_config)

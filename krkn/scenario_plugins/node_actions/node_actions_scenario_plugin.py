@@ -152,7 +152,7 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
         affected_nodes_status = node_scenario_object.affected_nodes_status
         scenario_telemetry.affected_nodes = affected_nodes_status.affected_nodes
 
-    def multiprocess_nodes(self, nodes, node_scenario_object, action, node_scenario, affected_nodes_status):
+    def multiprocess_nodes(self, nodes, node_scenario_object, action, node_scenario):
         try:
             logging.info("parallely call to nodes")
             # pool object with number of element
@@ -161,7 +161,6 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
             pool.starmap(self.run_node,zip(nodes, repeat(node_scenario_object), repeat(action), repeat(node_scenario)))
 
             pool.close()
-            return affected_nodes_status
         except Exception as e:
             logging.info("Error on pool multiprocessing: " + str(e))
 
