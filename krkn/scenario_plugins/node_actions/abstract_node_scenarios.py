@@ -30,6 +30,8 @@ class abstract_node_scenarios:
         logging.info("Waiting for %s seconds before starting the node" % (duration))
         time.sleep(duration)
         self.node_start_scenario(instance_kill_count, node, timeout)
+
+        logging.info('affected nodes ' + str(self.affected_nodes_status.affected_nodes))
         self.affected_nodes_status.merge_affected_nodes()
         logging.info("node_stop_start_scenario has been successfully injected!")
 

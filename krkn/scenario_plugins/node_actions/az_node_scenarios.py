@@ -93,8 +93,9 @@ class Azure:
         return status
 
     # Wait until the node instance is running
-    def wait_until_running(self, resource_group, vm_name, timeout):
+    def wait_until_running(self, resource_group, vm_name, timeout, affected_node):
         time_counter = 0
+        start_time = time.time()
         status = self.get_vm_status(resource_group, vm_name)
         while status and status.code != "PowerState/running":
             status = self.get_vm_status(resource_group, vm_name)
@@ -104,11 +105,14 @@ class Azure:
             if time_counter >= timeout:
                 logging.info("Vm %s is still not ready in allotted time" % vm_name)
                 return False
+        end_time = time.time()
+        affected_node.set_affected_node_status("running", end_time - start_time)
         return True
 
     # Wait until the node instance is stopped
-    def wait_until_stopped(self, resource_group, vm_name, timeout):
+    def wait_until_stopped(self, resource_group, vm_name, timeout, affected_node):
         time_counter = 0
+        start_time = time.time()
         status = self.get_vm_status(resource_group, vm_name)
         while status and status.code != "PowerState/stopped":
             status = self.get_vm_status(resource_group, vm_name)
@@ -118,10 +122,13 @@ class Azure:
             if time_counter >= timeout:
                 logging.info("Vm %s is still not stopped in allotted time" % vm_name)
                 return False
+        end_time = time.time()
+        affected_node.set_affected_node_status("stopped", end_time - start_time)
         return True
 
     # Wait until the node instance is terminated
-    def wait_until_terminated(self, resource_group, vm_name, timeout):
+    def wait_until_terminated(self, resource_group, vm_name, timeout, affected_node):
+        start_time = time.time()
         statuses = self.compute_client.virtual_machines.instance_view(
             resource_group, vm_name
         ).statuses[0]
@@ -140,6 +147,8 @@ class Azure:
                     return False
             except Exception:
                 logging.info("Vm %s is terminated" % vm_name)
+                end_time = time.time()
+                affected_node.set_affected_node_status("terminated", end_time - start_time)
                 return True
 
 
@@ -164,7 +173,7 @@ class azure_node_scenarios(abstract_node_scenarios):
                     % (vm_name, resource_group)
                 )
                 self.azure.start_instances(resource_group, vm_name)
-                self.azure.wait_until_running(resource_group, vm_name, timeout)
+                self.azure.wait_until_running(resource_group, vm_name, timeout, affected_node=affected_node)
                 nodeaction.wait_for_ready_status(vm_name, timeout, self.kubecli, affected_node)
                 logging.info("Node with instance ID: %s is in running state" % node)
                 logging.info("node_start_scenario has been successfully injected!")
@@ -190,7 +199,7 @@ class azure_node_scenarios(abstract_node_scenarios):
                     % (vm_name, resource_group)
                 )
                 self.azure.stop_instances(resource_group, vm_name)
-                self.azure.wait_until_stopped(resource_group, vm_name, timeout)
+                self.azure.wait_until_stopped(resource_group, vm_name, timeout, affected_node=affected_node)
                 logging.info("Node with instance ID: %s is in stopped state" % vm_name)
                 nodeaction.wait_for_unknown_status(vm_name, timeout, self.kubecli, affected_node)
             except Exception as e:
@@ -206,6 +215,7 @@ class azure_node_scenarios(abstract_node_scenarios):
     # Node scenario to terminate the node
     def node_termination_scenario(self, instance_kill_count, node, timeout):
         for _ in range(instance_kill_count):
+            affected_node = AffectedNode(node)
             try:
                 logging.info("Starting node_termination_scenario injection")
                 affected_node = AffectedNode(node)
@@ -215,7 +225,7 @@ class azure_node_scenarios(abstract_node_scenarios):
                     % (vm_name, resource_group)
                 )
                 self.azure.terminate_instances(resource_group, vm_name)
-                self.azure.wait_until_terminated(resource_group, vm_name, timeout)
+                self.azure.wait_until_terminated(resource_group, vm_name, timeout, affected_node)
                 for _ in range(timeout):
                     if vm_name not in self.kubecli.list_nodes():
                         break

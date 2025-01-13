@@ -154,11 +154,13 @@ class GCP:
             raise RuntimeError()
 
     # Get instance status
-    def get_instance_status(self, instance_id, expected_status, timeout):
+    def get_instance_status(self, instance_id, expected_status, timeout, affected_node):
         # states: PROVISIONING, STAGING, RUNNING, STOPPING, SUSPENDING, SUSPENDED, REPAIRING,
         # and TERMINATED.
         i = 0
         sleeper = 5
+        start_time = time.time()
+        stopped_status = False
         while i <= timeout:
             try:
                 request = compute_v1.GetInstanceRequest(
@@ -167,16 +169,23 @@ class GCP:
                     zone=self.get_node_instance_zone(instance_id),
                 )
                 instance_status = self.instance_client.get(request=request).status
+                if instance_status.lower() == "stopping": 
+                    stopped_status = True
                 logging.info("Status of instance " + str(instance_id) + ": " + instance_status)
             except Exception as e:
                 logging.error(
                     "Failed to get status of instance %s. Encountered following "
                     "exception: %s." % (instance_id, e)
                 )
-
                 raise RuntimeError()
 
             if instance_status == expected_status:
+                logging.info('status matches, end' + str(expected_status) + str(instance_status))
+                end_time = time.time()
+                if stopped_status: 
+                    expected_status = "stopped"
+                affected_node.set_affected_node_status(expected_status, end_time - start_time)
+                logging.info("affected node " + str(affected_node.to_json()))
                 return True
             time.sleep(sleeper)
             i += sleeper
@@ -191,17 +200,17 @@ class GCP:
         return self.get_instance_status(instance_id, "SUSPENDED", timeout)
 
     # Wait until the node instance is running
-    def wait_until_running(self, instance_id, timeout):
-        return self.get_instance_status(instance_id, "RUNNING", timeout)
+    def wait_until_running(self, instance_id, timeout, affected_node):
+        return self.get_instance_status(instance_id, "RUNNING", timeout, affected_node)
 
     # Wait until the node instance is stopped
-    def wait_until_stopped(self, instance_id, timeout):
+    def wait_until_stopped(self, instance_id, timeout, affected_node):
         # In GCP, the next state after STOPPING is TERMINATED
-        return self.get_instance_status(instance_id, "TERMINATED", timeout)
+        return self.get_instance_status(instance_id, "TERMINATED", timeout, affected_node)
 
     # Wait until the node instance is terminated
-    def wait_until_terminated(self, instance_id, timeout):
-        return self.get_instance_status(instance_id, "TERMINATED", timeout)
+    def wait_until_terminated(self, instance_id, timeout, affected_node):
+        return self.get_instance_status(instance_id, "TERMINATED", timeout, affected_node)
 
 
 # krkn_lib
@@ -223,7 +232,7 @@ class gcp_node_scenarios(abstract_node_scenarios):
                     "Starting the node %s with instance ID: %s " % (node, instance_id)
                 )
                 self.gcp.start_instances(instance_id)
-                self.gcp.wait_until_running(instance_id, timeout)
+                self.gcp.wait_until_running(instance_id, timeout, affected_node)
                 nodeaction.wait_for_ready_status(node, timeout, self.kubecli, affected_node)
                 logging.info(
                     "Node with instance ID: %s is in running state" % instance_id
@@ -237,7 +246,7 @@ class gcp_node_scenarios(abstract_node_scenarios):
                 logging.error("node_start_scenario injection failed!")
 
                 raise RuntimeError()
-            
+            logging.info("started affected node" + str(affected_node.to_json()))
             self.affected_nodes_status.affected_nodes.append(affected_node)
 
     # Node scenario to stop the node
@@ -252,7 +261,7 @@ class gcp_node_scenarios(abstract_node_scenarios):
                     "Stopping the node %s with instance ID: %s " % (node, instance_id)
                 )
                 self.gcp.stop_instances(instance_id)
-                self.gcp.wait_until_stopped(instance_id, timeout)
+                self.gcp.wait_until_stopped(instance_id, timeout, affected_node=affected_node)
                 logging.info(
                     "Node with instance ID: %s is in stopped state" % instance_id
                 )
@@ -265,12 +274,13 @@ class gcp_node_scenarios(abstract_node_scenarios):
                 logging.error("node_stop_scenario injection failed!")
 
                 raise RuntimeError()
-
+            logging.info("stopedd affected node" + str(affected_node.to_json()))
             self.affected_nodes_status.affected_nodes.append(affected_node)
 
     # Node scenario to terminate the node
     def node_termination_scenario(self, instance_kill_count, node, timeout):
         for _ in range(instance_kill_count):
+            affected_node = AffectedNode(node)
             try:
                 logging.info("Starting node_termination_scenario injection")
                 instance = self.gcp.get_node_instance(node)
@@ -280,7 +290,7 @@ class gcp_node_scenarios(abstract_node_scenarios):
                     % (node, instance_id)
                 )
                 self.gcp.terminate_instances(instance_id)
-                self.gcp.wait_until_terminated(instance_id, timeout)
+                self.gcp.wait_until_terminated(instance_id, timeout, affected_node=affected_node)
                 for _ in range(timeout):
                     if node not in self.kubecli.list_nodes():
                         break
@@ -299,6 +309,7 @@ class gcp_node_scenarios(abstract_node_scenarios):
                 logging.error("node_termination_scenario injection failed!")
 
                 raise RuntimeError()
+            self.affected_nodes_status.affected_nodes.append(affected_node)
 
     # Node scenario to reboot the node
     def node_reboot_scenario(self, instance_kill_count, node, timeout):
@@ -312,7 +323,8 @@ class gcp_node_scenarios(abstract_node_scenarios):
                     "Rebooting the node %s with instance ID: %s " % (node, instance_id)
                 )
                 self.gcp.reboot_instances(instance_id)
-                self.gcp.wait_until_running(instance_id, timeout)
+                nodeaction.wait_for_unknown_status(node, timeout, self.kubecli, affected_node)
+                self.gcp.wait_until_running(instance_id, timeout, affected_node)
                 nodeaction.wait_for_ready_status(node, timeout, self.kubecli, affected_node)
                 logging.info(
                     "Node with instance ID: %s has been rebooted" % instance_id
