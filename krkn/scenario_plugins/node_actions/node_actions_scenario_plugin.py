@@ -150,7 +150,7 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
             for single_node in nodes:
                 self.run_node(single_node, node_scenario_object, action, node_scenario)
         affected_nodes_status = node_scenario_object.affected_nodes_status
-        scenario_telemetry.affected_nodes = affected_nodes_status.affected_nodes
+        scenario_telemetry.affected_nodes.extend(affected_nodes_status.affected_nodes)
 
     def multiprocess_nodes(self, nodes, node_scenario_object, action, node_scenario):
         try:
@@ -187,42 +187,42 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
             )
         else:
             if action == "node_start_scenario":
-                affected_node = node_scenario_object.node_start_scenario(
+                node_scenario_object.node_start_scenario(
                     run_kill_count, single_node, timeout
                 )
             elif action == "node_stop_scenario":
-                affected_node = node_scenario_object.node_stop_scenario(
+                node_scenario_object.node_stop_scenario(
                     run_kill_count, single_node, timeout
                 )
             elif action == "node_stop_start_scenario":
-                affected_node = node_scenario_object.node_stop_start_scenario(
+                node_scenario_object.node_stop_start_scenario(
                     run_kill_count, single_node, timeout, duration
                 )
             elif action == "node_termination_scenario":
-                affected_node = node_scenario_object.node_termination_scenario(
+                node_scenario_object.node_termination_scenario(
                     run_kill_count, single_node, timeout
                 )
             elif action == "node_reboot_scenario":
-                affected_node = node_scenario_object.node_reboot_scenario(
+                node_scenario_object.node_reboot_scenario(
                     run_kill_count, single_node, timeout
                 )
             elif action == "node_disk_detach_attach_scenario":
                 node_scenario_object.node_disk_detach_attach_scenario(
                     run_kill_count, single_node, timeout, duration)
             elif action == "stop_start_kubelet_scenario":
-                affected_node = node_scenario_object.stop_start_kubelet_scenario(
+                node_scenario_object.stop_start_kubelet_scenario(
                     run_kill_count, single_node, timeout
                 )
             elif action == "restart_kubelet_scenario":
-                affected_node = node_scenario_object.restart_kubelet_scenario(
+                node_scenario_object.restart_kubelet_scenario(
                     run_kill_count, single_node, timeout
                 )
             elif action == "stop_kubelet_scenario":
-                affected_node = node_scenario_object.stop_kubelet_scenario(
+                node_scenario_object.stop_kubelet_scenario(
                     run_kill_count, single_node, timeout
                 )
             elif action == "node_crash_scenario":
-                affected_node = node_scenario_object.node_crash_scenario(
+                node_scenario_object.node_crash_scenario(
                     run_kill_count, single_node, timeout
                 )
             elif action == "stop_start_helper_node_scenario":
@@ -239,10 +239,10 @@ class NodeActionsScenarioPlugin(AbstractScenarioPlugin):
                         raise Exception(
                             "Helper node IP address is not provided"
                         )
-                    affected_node = node_scenario_object.helper_node_stop_start_scenario(
+                    node_scenario_object.helper_node_stop_start_scenario(
                         run_kill_count, node_scenario["helper_node_ip"], timeout
                     )
-                    affected_node = node_scenario_object.helper_node_service_status(
+                    node_scenario_object.helper_node_service_status(
                         node_scenario["helper_node_ip"],
                         service,
                         ssh_private_key,
