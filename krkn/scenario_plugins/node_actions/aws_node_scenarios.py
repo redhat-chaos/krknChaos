@@ -83,7 +83,7 @@ class AWS:
             self.boto_instance.wait_until_running(InstanceIds=[instance_id])
             end_time = time.time()
             if affected_node:
-                affected_node.set_effected_node_status("running", end_time - start_time)
+                affected_node.set_affected_node_status("running", end_time - start_time)
             return True
         except Exception as e:
             logging.error(
@@ -99,7 +99,7 @@ class AWS:
             self.boto_instance.wait_until_stopped(InstanceIds=[instance_id])
             end_time = time.time()
             if affected_node:
-                affected_node.set_effected_node_status("stopped", end_time - start_time)
+                affected_node.set_affected_node_status("stopped", end_time - start_time)
             return True
         except Exception as e:
             logging.error(
@@ -115,7 +115,7 @@ class AWS:
             self.boto_instance.wait_until_terminated(InstanceIds=[instance_id])
             end_time = time.time()
             if affected_node:
-                affected_node.set_effected_node_status("terminated", end_time - start_time)
+                affected_node.set_affected_node_status("terminated", end_time - start_time)
             return True
         except Exception as e:
             logging.error(
